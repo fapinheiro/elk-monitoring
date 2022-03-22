@@ -32,7 +32,7 @@ helm install -n default -f elasticsearch/elasticsearch.yaml elasticsearch elasti
 # Fluentd 
 Install FluentD in the namespaces you need to collect data
 
-FluentD is configured as a DaemonSet is like a ReplicaSet, but this tells k8s to run on every single node. A special type of workload.
+FluentD is configured as a DaemonSet is like a ReplicaSet, but this tells k8s to run on every single node. A special type of workload. It will create a pod regarding the amout of nodes and each fluentd pod collects logs only from containers running in its node attached.
 
 Lista de Datasources https://www.fluentd.org/datasources
 
@@ -68,7 +68,7 @@ helm repo add elastic https://helm.elastic.co
 helm repo update
 helm search repo elastic/kibana
 helm show values elastic/kibana
-helm install -n default -f kibana\kibana.yaml kibana elastic/kibana --version=7.17.1
+helm install -n default -f kibana/kibana.yaml kibana elastic/kibana --version=7.17.1
 ```
 
 Optional
@@ -89,5 +89,6 @@ If everything is ok, go to Kibana Discover and have fun :)
 
 # References
 https://artifacthub.io/packages/helm/bitnami/fluentd
+https://docs.fluentd.org/v/0.12/configuration/config-file
 https://artifacthub.io/packages/helm/elastic/elasticsearch
 https://artifacthub.io/packages/helm/elastic/kibana

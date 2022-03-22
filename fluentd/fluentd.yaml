@@ -169,21 +169,64 @@ forwarder:
         @type http
         port 9880
       </source>
+
       # Get the logs from the containers running in the node
+      # May be different depending on cloud provider and kubernetes version
       <source>
         @type tail
-        path /var/log/containers/*.log
-        # exclude Fluentd logs
-        exclude_path /var/log/containers/*fluentd*.log
-        pos_file /opt/bitnami/fluentd/logs/buffers/fluentd-docker.pos
+
+        # Add path or exclusions
+        path /var/log/containers/health-api*.log
+        #path /var/log/pods/*.log
+        #path /var/log/pods/*.log
+        #path /u01/data/docker/containers/
+
+        # exclude Fluentd logs if necessary
+        #exclude_path ["/var/log/containers/*fluentd*.log"]
+        #exclude_path /var/log/pods/*fluentd*.log
+        #exclude_path /var/log/pods/*fluentd*.log
+
+        pos_file /opt/bitnami/fluentd/logs/buffers/app-05.pos
         tag kubernetes.*
         read_from_head true
+
+        # Parse for docker engine 
         <parse>
           @type json
           time_key time
           time_format %Y-%m-%dT%H:%M:%S.%NZ
         </parse>
+
+        # Parse for docker engine cri-o and containerd 
+        # Check the expression/regex here https://fluentular.herokuapp.com/
+        # <parse>
+        #   @type multi_format
+        #   <pattern>
+        #     format regexp
+        #     time_format %Y-%m-%dT%H:%M:%S.%NZ
+        #     expression  /^(?<date>....-..-..) (?<datetime>..:..:............) (?<hour>.....) (?<k8s>.+.log:) (?<log>.*)/
+        #   </pattern>
+        # </parse>
+
+        
       </source>
+
+      # Filter if docker engine cri-o and containerd
+      # Parse the original file into json
+      # <filter **>
+      #   @type parser
+      #   key_name log
+      #   <parse>
+      #     @type multi_format
+      #     <pattern>
+      #       format json
+      #       time_key time
+      #       keep_time_key true
+      #     </pattern>
+      #   </parse>
+      # </filter>
+
+
       # enrich with kubernetes metadata
       <filter kubernetes.**>
         @type kubernetes_metadata
@@ -191,8 +234,9 @@ forwarder:
     fluentd-output.conf: |
       # Throw the healthcheck to the standard output instead of forwarding it
       <match fluentd.healthcheck>
-        @type stdout
+        @type null
       </match>
+
       {{- if .Values.aggregator.enabled }}
       # Forward all logs to the aggregators
       <match **>
@@ -219,7 +263,7 @@ forwarder:
         {{- end }}
         <buffer>
           @type file
-          path /opt/bitnami/fluentd/logs/buffers/logs.buffer
+          path /opt/bitnami/fluentd/logs/buffers/elasticsearch-forward-logs-05.buffer
           flush_thread_count 2
           flush_interval 5s
         </buffer>
@@ -229,6 +273,24 @@ forwarder:
       <match **>
         @type stdout
       </match>
+
+       # Send the logs to the standard output
+      # <match **>
+      #     @type elasticsearch
+      #     include_tag_key true
+      #     host "elasticsearch-master.default.svc.cluster.local"
+      #     port "9200"
+      #     # index_name "app-logs"
+      #     logstash_format true
+
+      #     # Check if necessary
+      #     <buffer>
+      #       @type file
+      #       path /opt/bitnami/fluentd/logs/buffers/elasticsearch-04.buffer
+      #       flush_thread_count 1
+      #       flush_interval 5s
+      #     </buffer>
+      # </match>
       {{- end }}
     metrics.conf: |
       # Prometheus Exporter Plugin
@@ -707,20 +769,27 @@ aggregator:
     fluentd-output.conf: |
       # Throw the healthcheck to the standard output
       <match fluentd.healthcheck>
-        @type stdout
+        @type null
       </match>
+
+      # Enable only for testing
+      # <match **>
+      #     @type file
+      #     path /tmp/file-test.log
+      # </match>
 
       # Send the logs to the standard output
       <match **>
           @type elasticsearch
           include_tag_key true
-          host elasticsearch-master.default.svc.cluster.local
-          port 9200
+          host "elasticsearch-master.default.svc.cluster.local"
+          port "9200"
           logstash_format true
 
+          # Check if necessary
           <buffer>
             @type file
-            path /opt/bitnami/fluentd/logs/buffers/logs.buffer
+            path /opt/bitnami/fluentd/logs/buffers/elasticsearch-aggregator-logs-05.buffer
             flush_thread_count 2
             flush_interval 5s
           </buffer>
