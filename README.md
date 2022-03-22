@@ -92,3 +92,4 @@ https://artifacthub.io/packages/helm/bitnami/fluentd
 https://docs.fluentd.org/v/0.12/configuration/config-file
 https://artifacthub.io/packages/helm/elastic/elasticsearch
 https://artifacthub.io/packages/helm/elastic/kibana
+https://discuss.elastic.co/t/how-to-delete-the-indices-older-than-30-days/242182/2
