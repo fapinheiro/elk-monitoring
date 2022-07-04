@@ -234,7 +234,7 @@ forwarder:
         # Regra para filtrar o CPF no sistema health-api
         <rule>
             keys log
-            pattern_regex /CPF:\s(?<CPF>.*)/
+            pattern_regex /CPF:\s(?<CPF>.*?)/
             regex_capture_group "CPF"
             pattern_regex_prefix "*"
         </rule>
