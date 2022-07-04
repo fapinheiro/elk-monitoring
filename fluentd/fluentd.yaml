@@ -68,8 +68,8 @@ diagnosticMode:
 ##
 image:
   registry: docker.io
-  repository: bitnami/fluentd
-  tag: 1.14.4-debian-10-r11
+  repository: fapinheiro/fluentd-sanitizer
+  tag: 1.0.0
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -226,6 +226,19 @@ forwarder:
       #   </parse>
       # </filter>
 
+      # Filter for sensitive data
+      <filter **>
+        @type sanitizer
+        hash_salt embracon
+        
+        # Regra para filtrar o CPF no sistema health-api
+        <rule>
+            keys log
+            pattern_regex /CPF:\s(?<CPF>.*)/
+            regex_capture_group "CPF"
+            pattern_regex_prefix "*"
+        </rule>
+      </filter>
 
       # enrich with kubernetes metadata
       <filter kubernetes.**>
@@ -636,6 +649,7 @@ forwarder:
   ##     command: ["/bin/sh","-c","nginx -s quit; while killall -0 nginx; do sleep 1; done"]
   ##
   lifecycleHooks: {}
+  
   ## @param forwarder.initContainers Additional init containers to add to the pods
   ## For example:
   ## initContainers:
@@ -1240,6 +1254,7 @@ aggregator:
   ##     command: ["/bin/sh","-c","nginx -s quit; while killall -0 nginx; do sleep 1; done"]
   ##
   lifecycleHooks: {}
+
   ## @param aggregator.initContainers Add init containers to aggregator pods
   ## Example
   ##

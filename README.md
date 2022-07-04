@@ -53,6 +53,16 @@ helm show values bitnami/fluentd
 helm install -n default -f fluentd/fluentd.yaml fluentd bitnami/fluentd --version=5.0.0
 ```
 
+## Sanitizer
+- Verificar se o plugin está instalado
+fluent-gem list
+
+- Instalar o plugin
+fluent-gem install fluent-plugin-sanitizer -v 0.1.2
+
+- Build custom image
+docker image build -t fapinheiro/fluentd-sanitizer:1.0.0 .
+
 
 # Kibana
 Install as a replica set in at least 1 node
